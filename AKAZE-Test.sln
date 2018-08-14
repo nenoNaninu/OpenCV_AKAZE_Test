@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27703.2035
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AKAZE-Test", "AKAZE-Test\AKAZE-Test.vcxproj", "{B67C08CA-B098-4D7E-96C9-33D2E6D55B8B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B67C08CA-B098-4D7E-96C9-33D2E6D55B8B}.Debug|x64.ActiveCfg = Debug|x64
+		{B67C08CA-B098-4D7E-96C9-33D2E6D55B8B}.Debug|x64.Build.0 = Debug|x64
+		{B67C08CA-B098-4D7E-96C9-33D2E6D55B8B}.Debug|x86.ActiveCfg = Debug|Win32
+		{B67C08CA-B098-4D7E-96C9-33D2E6D55B8B}.Debug|x86.Build.0 = Debug|Win32
+		{B67C08CA-B098-4D7E-96C9-33D2E6D55B8B}.Release|x64.ActiveCfg = Release|x64
+		{B67C08CA-B098-4D7E-96C9-33D2E6D55B8B}.Release|x64.Build.0 = Release|x64
+		{B67C08CA-B098-4D7E-96C9-33D2E6D55B8B}.Release|x86.ActiveCfg = Release|Win32
+		{B67C08CA-B098-4D7E-96C9-33D2E6D55B8B}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A5B45234-A699-4F23-94AC-421DED54EFB8}
+	EndGlobalSection
+EndGlobal
