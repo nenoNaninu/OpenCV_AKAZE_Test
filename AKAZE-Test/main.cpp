@@ -18,34 +18,38 @@ namespace neno
     }
 
     //双方向マッチングしないとまともな精度が出なかった。双方向マッチングがうまくできた上でdistanceをみてより精度を上げるようにしてるけど双方向マッチングで弾かれたら距離小さそうだけどどうなんだろ。
-    void extractGoogPoint(const std::vector<std::vector<cv::DMatch>>& matchesSrc2Dst,const std::vector<std::vector<cv::DMatch>> matchesDst2Src,std::vector<cv::DMatch>& gootPoints)
+    //knnにして0.8distance2と比較して弾くとめちゃくちゃよくなるんだけど…。意味合い的にはあまりにも似てる(0.9~1の倍率)やつは弾くって意味になるんだけどなんでそれでそんなに良くなるものなのか。
+    void extractGoogPoint(const std::vector<std::vector<cv::DMatch>>& matchesSrc2Dst, const std::vector<std::vector<cv::DMatch>> matchesDst2Src, std::vector<cv::DMatch>& gootPoints)
     {
-        for(auto& src2Dst : matchesSrc2Dst)
+        for (auto& src2Dst : matchesSrc2Dst)
         {
             cv::DMatch src2dstMatch = src2Dst[0];
             float dist1 = src2Dst[0].distance;
             float dist2 = src2Dst[1].distance;
-
-            if(dist1 < 0.8 * dist2)
+            std::cout << dist1 << ":" << dist2 << ":"<< (dist1 < 0.8 * dist2) <<std::endl;
+            if (dist1 < 0.8 * dist2)
             {
-                std::vector<cv::DMatch> dst2src = matchesDst2Src[src2dstMatch.trainIdx];
-                cv::DMatch dst2srcMatch = dst2src[0];
-                dist1 = dst2src[0].distance;
-                dist2 = dst2src[1].distance;
+                //    std::vector<cv::DMatch> dst2src = matchesDst2Src[src2dstMatch.trainIdx];
+                //    cv::DMatch dst2srcMatch = dst2src[0];
+                //    dist1 = dst2src[0].distance;
+                //    dist2 = dst2src[1].distance;
 
-                if(dist1 < 0.8 * dist2)
-                {
-                    if (src2dstMatch.queryIdx == dst2srcMatch.trainIdx)
-                    {
-                        gootPoints.push_back(src2dstMatch);
-                    }
-                }
+                //    if(dist1 < 0.8 * dist2)
+                //    {
+                //        if (src2dstMatch.queryIdx == dst2srcMatch.trainIdx)
+                //        {
+                //            gootPoints.push_back(src2dstMatch);
+                //        }
+                //    }
+                gootPoints.push_back(src2dstMatch);
+
             }
+
         }
     }
 
     //VideoCaptureはconstで渡すと>>が使えなくなる
-    void takePicture(cv::VideoCapture& capture,cv::Mat& img)
+    void takePicture(cv::VideoCapture& capture, cv::Mat& img)
     {
         while (true)
         {
@@ -53,7 +57,7 @@ namespace neno
             capture >> captureimg;
             cv::imshow("photoImg", captureimg);
             char key = cv::waitKey(1);
-            if(key == 't')
+            if (key == 't')
             {
                 captureimg.copyTo(img);
                 break;
@@ -78,8 +82,8 @@ int main()
 
     std::vector<cv::KeyPoint> srcKeypoints;
     cv::Mat srcDescriptors;
-    
-    feature2->detectAndCompute(srcImg, cv::noArray(),srcKeypoints,srcDescriptors);
+
+    feature2->detectAndCompute(srcImg, cv::noArray(), srcKeypoints, srcDescriptors);
 
 
     //特徴量のマッチャーを作る。Flannが使えない。なぜなのか。
@@ -94,24 +98,24 @@ int main()
         std::vector<cv::KeyPoint> dstKeypoints;
         cv::Mat dstDescriptors;
 
-        feature2->detectAndCompute(dstImg, cv::noArray(),dstKeypoints,dstDescriptors);
-        if(dstDescriptors.data == nullptr)
+        feature2->detectAndCompute(dstImg, cv::noArray(), dstKeypoints, dstDescriptors);
+        if (dstDescriptors.data == nullptr)
         {
             inputKey == cv::waitKey(1);
             continue;
         }
         cv::imshow("cameraImg", dstImg);
-        std::vector<std::vector<cv::DMatch>> matchesSrc2dst,matchesDst2src;
+        std::vector<std::vector<cv::DMatch>> matchesSrc2dst, matchesDst2src;
 
-        matcher->knnMatch(srcDescriptors, dstDescriptors, matchesSrc2dst,2);
-        matcher->knnMatch(dstDescriptors, srcDescriptors, matchesDst2src,2);
+        matcher->knnMatch(srcDescriptors, dstDescriptors, matchesSrc2dst, 2);
+        matcher->knnMatch(dstDescriptors, srcDescriptors, matchesDst2src, 2);
 
 
-        if(matchesSrc2dst.size() > 0)
+        if (matchesSrc2dst.size() > 0)
         {
             //最小距離を求める。
             std::vector<cv::DMatch> goodMatches;
-            neno::extractGoogPoint(matchesSrc2dst,matchesDst2src, goodMatches);
+            neno::extractGoogPoint(matchesSrc2dst, matchesDst2src, goodMatches);
 
             if (goodMatches.size() > 10)
             {
@@ -131,16 +135,15 @@ int main()
                         0, 0, srcImg.rows, srcImg.rows,
                         1, 1, 1, 1
                         );
-                    std::cout << srcImgCornerMat.type() << h.type() << std::endl;
-                    
+
                     cv::Mat dstCornerMat = h * srcImgCornerMat;
                     cv::Mat drawImg;
                     cv::drawMatches(srcImg, srcKeypoints, dstImg, dstKeypoints, goodMatches, drawImg);
                     double* cornerPtr = reinterpret_cast<double*>(dstCornerMat.data);
-                    cv::Point2f corner0(cornerPtr[0]/cornerPtr[8], cornerPtr[4]/ cornerPtr[8]); //[x,y,w]でwで割る操作とかがperspectiveTransform使うと要らなくなるみたい。
-                    cv::Point2f corner1(cornerPtr[1]/ cornerPtr[9], cornerPtr[5]/ cornerPtr[9]);
-                    cv::Point2f corner2(cornerPtr[2] / cornerPtr[10], cornerPtr[6]/ cornerPtr[10]);
-                    cv::Point2f corner3(cornerPtr[3]/cornerPtr[11], cornerPtr[7]/cornerPtr[11]);
+                    cv::Point2f corner0(cornerPtr[0] / cornerPtr[8], cornerPtr[4] / cornerPtr[8]); //[x,y,w]でwで割る操作とかがperspectiveTransform使うと要らなくなるみたい。
+                    cv::Point2f corner1(cornerPtr[1] / cornerPtr[9], cornerPtr[5] / cornerPtr[9]);
+                    cv::Point2f corner2(cornerPtr[2] / cornerPtr[10], cornerPtr[6] / cornerPtr[10]);
+                    cv::Point2f corner3(cornerPtr[3] / cornerPtr[11], cornerPtr[7] / cornerPtr[11]);
 
                     cv::line(drawImg, corner0 + cv::Point2f(srcImg.cols, .0f), corner1 + cv::Point2f(srcImg.cols, .0f), cv::Scalar(0, 255, 0), 4);
                     cv::line(drawImg, corner1 + cv::Point2f(srcImg.cols, .0f), corner2 + cv::Point2f(srcImg.cols, .0f), cv::Scalar(0, 255, 0), 4);
